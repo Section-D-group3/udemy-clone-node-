@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String               @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @default(now())
+  userName       String
+  email          String               @unique
+  image          String
+  course         Course[]
+  rating         UserOnCourseRating[]
+  enrolled       UserOnCourse[]
+  ContentSection ContentSection[]
+}
+
+model TopCategory {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  title     String     @unique
+  category  Category[]
+}
+
+model Category {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  title         String      @unique
+  topCategoryId String      @db.ObjectId
+  topCategory   TopCategory @relation(fields: [topCategoryId], references: [id], onDelete: Cascade)
+  course        Course[]
+}
+
+model Course {
+  id              String               @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  title           String
+  description     String
+  fullDescription String?
+  price           Float                @default(0)
+  revisedPrice    Float                @default(0)
+  thumbnail       String
+  authorId        String?              @db.ObjectId
+  categoryId      String               @db.ObjectId
+  author          User?                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category        Category?            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  content         Content[]
+  requirements    Requirements[]
+  rating          UserOnCourseRating[]
+  enrolledBy      UserOnCourse[]
+  objective       Ojective[]
+}
+
+model Ojective {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  courseId  String   @db.ObjectId
+  Course    Course   @relation(fields: [courseId], references: [id])
+}
+
+model Content {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  courseId       String           @db.ObjectId
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  course         Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  contentSection ContentSection[]
+}
+
+model ContentSection {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  url       String   @unique
+  authorId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  contentId String   @db.ObjectId
+  content   Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Requirements {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  courseId  String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Rating {
+  id     String               @id @default(auto()) @map("_id") @db.ObjectId
+  value  Float
+  review String
+  course UserOnCourseRating[]
+}
+
+model UserOnCourseRating {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId  String   @db.ObjectId
+  ratingId  String   @db.ObjectId
+  userId    String   @db.ObjectId
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating    Rating   @relation(fields: [ratingId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  // @@id([courseId, ratingId, userId])
+}
+
+model UserOnCourse {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  courseId  String   @db.ObjectId
+  userId    String   @db.ObjectId
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  // @@id([courseId, userId])
+}
